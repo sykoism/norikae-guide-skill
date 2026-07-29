@@ -6,7 +6,7 @@ Use these examples when translating user requests into canonical fields before q
 
 | User Request | Canonical Fields |
 | --- | --- |
-| 东京到新宿怎么走 | `from=東京`, `to=新宿` |
+| 東京去新宿點走？ | `from=東京`, `to=新宿` |
 | Route from Shinjuku to Yokohama | `from=新宿`, `to=横浜` |
 | 東京から九段下まで | `from=東京`, `to=九段下` |
 
@@ -16,24 +16,24 @@ Use these examples when translating user requests into canonical fields before q
 | --- | --- |
 | 東京から新宿まで、表参道経由で | `from=東京`, `to=新宿`, `via=["表参道"]` |
 | Shibuya to Ikebukuro via Harajuku and Shinjuku | `from=渋谷`, `to=池袋`, `via=["原宿","新宿"]` |
-| 东京到上野，经过秋叶原和神田 | `from=東京`, `to=上野`, `via=["秋葉原","神田"]` |
+| 東京去上野，經過秋葉原同神田 | `from=東京`, `to=上野`, `via=["秋葉原","神田"]` |
 
 ## Time Intent
 
 | User Request | Canonical Fields |
 | --- | --- |
-| 10:30出发 | `hour=10`, `minute=30`, `timeType=departure` |
+| 10:30出發 | `hour=10`, `minute=30`, `timeType=departure` |
 | I need to arrive by 18:00 | `hour=18`, `minute=0`, `timeType=arrival` |
 | 始発で行きたい | `timeType=first_train` |
-| 最终电车回去 | `timeType=last_train` |
+| 搭尾班車返去 | `timeType=last_train` |
 
 ## Sort Preference
 
 | User Request | Canonical Fields |
 | --- | --- |
 | 一番安いルート | `sortBy=fare` |
-| 最快路线 | `sortBy=time` |
-| 换乘最少 | `sortBy=transfer` |
+| 最快路線 | `sortBy=time` |
+| 最少轉車 | `sortBy=transfer` |
 
 ## Fare, Seat, Walk
 
@@ -52,7 +52,7 @@ Use these examples when translating user requests into canonical fields before q
 | 新幹線なしで | `useShinkansen=false` |
 | 在来線だけで | `useShinkansen=false`, `useExpress=false` |
 | No buses please | `useHighwayBus=false`, `useLocalBus=false` |
-| 飞机也不要 | `useAirline=false` |
+| 唔搭飛機 | `useAirline=false` |
 
 ## Combined Constraints
 
@@ -60,7 +60,7 @@ Use these examples when translating user requests into canonical fields before q
 
 User request:
 
-`明天早上10点前到大阪，不要新干线，最便宜。`
+`聽朝10點前到大阪，唔搭新幹線，最平。`
 
 Canonical fields:
 
@@ -95,7 +95,7 @@ Canonical fields:
 | Shibuya Yamanote line schedule | `search 渋谷` → `lines <code>` → find 山手線 gid → `timetable <code> <gid>` |
 | 東京駅の東海道新幹線、平日の時刻表 | `search 東京` → `lines <code>` → find 東海道新幹線 gid → `timetable <code> <gid> --kind 1` |
 | 新宿から中央線で何時に電車がある？ | `search 新宿` → `lines <code>` → find 中央線 gid → `timetable <code> <gid>` |
-| 渋谷有哪些线路？ | `search 渋谷` → `lines <code>` (show all lines, don't proceed to timetable) |
+| 澀谷有咩路線？ | `search 渋谷` → `lines <code>` (show all lines, don't proceed to timetable) |
 
 When the user asks for a timetable:
 - If the station has only one line/direction, skip the `lines` step and go directly to `timetable`.
