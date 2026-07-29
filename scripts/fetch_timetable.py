@@ -11,14 +11,22 @@ from typing import Protocol, TypedDict, cast
 from urllib.parse import quote
 from urllib.request import Request, urlopen
 
+# Ensure Japanese/Chinese output is not mangled on Windows terminals
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")  # type: ignore[attr-defined]
+
 BASE_URL = "https://transit.yahoo.co.jp"
 SUGGEST_URL = f"{BASE_URL}/api/suggest"
 TIMETABLE_URL = f"{BASE_URL}/timetable"
 
-UA = (
-    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
-    "(KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36"
+# Updated to Chrome 136 (2025) — less likely to be blocked by Yahoo
+_USER_AGENT = (
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+    "(KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36"
 )
+
+# Guard against extremely large/malformed pages causing memory issues
+_MAX_RESPONSE_BYTES = 2 * 1024 * 1024  # 2 MB
 
 KIND_LABELS = {"1": "平日", "2": "土曜", "4": "日曜・祝日"}
 
@@ -122,10 +130,10 @@ class _TimetablePageProps(TypedDict):
 
 
 def _fetch(url: str, timeout: int) -> str:
-    request = Request(url, headers={"User-Agent": UA})
+    request = Request(url, headers={"User-Agent": _USER_AGENT})
     with urlopen(request, timeout=timeout) as resp:  # pyright: ignore[reportAny]
         charset = cast(str, resp.headers.get_content_charset()) or "utf-8"  # pyright: ignore[reportAny]
-        raw = cast(bytes, resp.read())  # pyright: ignore[reportAny]
+        raw = cast(bytes, resp.read(_MAX_RESPONSE_BYTES))  # pyright: ignore[reportAny]
         return raw.decode(charset, errors="ignore")
 
 
@@ -221,8 +229,9 @@ def cmd_timetable(args: _TimetableArgs) -> int:
     direction = tt["directionName"]
     kind_code = tt["driveDayKind"]
 
-    dest_map = {d["id"]: d["name"] for d in tt["master"]["destination"]}
-    kind_map = {k["id"]: k["name"] for k in tt["master"]["kind"]}
+    # Build lookup dicts once — O(1) per train entry below
+    dest_map = {d["id"]: d for d in tt["master"]["destination"]}
+    kind_map = {k["id"]: k for k in tt["master"]["kind"]}
 
     kind_label = KIND_LABELS.get(kind_code, kind_code)
     print(f"=== {station_name}駅 {rail_name} {direction}方面 ({kind_label}) ===")
@@ -256,17 +265,11 @@ def cmd_timetable(args: _TimetableArgs) -> int:
             minute = t["minute"]
             parts: list[str] = [minute]
 
-            kind_id = t["kindId"]
-            dest_id = t["destinationId"]
-            kind_info = ""
-            dest_info = ""
-
-            for k in tt["master"]["kind"]:
-                if k["id"] == kind_id and k["info"]:
-                    kind_info = k["info"]
-            for d in tt["master"]["destination"]:
-                if d["id"] == dest_id and d["info"]:
-                    dest_info = d["info"]
+            # O(1) dict lookups instead of O(n) inner loops
+            kind_entry = kind_map.get(t["kindId"])
+            dest_entry = dest_map.get(t["destinationId"])
+            kind_info = kind_entry["info"] if kind_entry and kind_entry["info"] else ""
+            dest_info = dest_entry["info"] if dest_entry and dest_entry["info"] else ""
 
             suffix = dest_info + kind_info
             if suffix:
@@ -329,7 +332,7 @@ def main() -> int:
             return cmd_lines(cast(_LinesArgs, args_obj))
         elif command == "timetable":
             return cmd_timetable(cast(_TimetableArgs, args_obj))
-    except Exception as exc:
+    except (OSError, ValueError) as exc:
         print(f"Error: {exc}", file=sys.stderr)
         return 1
     return 0

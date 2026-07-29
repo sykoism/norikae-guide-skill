@@ -11,6 +11,8 @@ OUT = ROOT / "norikae-guide-skill.zip"
 
 INCLUDE = [
     "SKILL.md",
+    "HERMES_INSTALL.md",
+    "agents/openai.yaml",
     "references/yahoo-transit-params.md",
     "references/natural-language-examples.md",
     "scripts/fetch_norikae_routes.py",

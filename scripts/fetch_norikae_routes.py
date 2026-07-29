@@ -6,13 +6,25 @@ from __future__ import annotations
 import argparse
 from datetime import datetime
 import html as html_lib
+import http.client
 import re
 import sys
+import urllib.error
 from typing import Protocol, cast
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
+# Ensure Japanese/Chinese output is not mangled on Windows terminals
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")  # type: ignore[attr-defined]
+
 BASE_URL = "https://transit.yahoo.co.jp/search/result"
+
+# Updated to Chrome 136 (2025) — less likely to be blocked by Yahoo
+_USER_AGENT = (
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+    "(KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36"
+)
 
 TIME_TYPE_MAP = {
     "departure": "1",
@@ -114,15 +126,7 @@ def build_url(args: _BuildUrlArgs) -> str:
 
 
 def fetch_html(url: str, timeout: int) -> str:
-    request = Request(
-        url,
-        headers={
-            "User-Agent": (
-                "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
-                "(KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36"
-            )
-        },
-    )
+    request = Request(url, headers={"User-Agent": _USER_AGENT})
     with urlopen(request, timeout=timeout) as resp:  # pyright: ignore[reportAny]
         charset = cast(str, resp.headers.get_content_charset()) or "utf-8"  # pyright: ignore[reportAny]
         raw = cast(bytes, resp.read())  # pyright: ignore[reportAny]
@@ -144,7 +148,7 @@ def _extract_summary(block: str) -> str:
         re.findall(r'<li class="(\w+)"[^>]*>(.*?)</li>', ul, re.S),
     )
     parts: list[str] = []
-    for _cls, content in items:
+    for _, content in items:  # _cls unused — only content matters
         parts.append(re.sub(r"\s+", " ", _strip_tags(content)))
     return " | ".join(parts)
 
@@ -351,8 +355,11 @@ def main() -> int:
     try:
         html = fetch_html(url, args.timeout)
         content = extract_content(html)
-    except Exception as exc:  # pragma: no cover - network/runtime failures
-        print(f"Error fetching route data: {exc}", file=sys.stderr)
+    except (OSError, urllib.error.URLError, http.client.HTTPException) as exc:
+        print(f"Network error fetching route data: {exc}", file=sys.stderr)
+        return 1
+    except ValueError as exc:
+        print(f"Data error fetching route data: {exc}", file=sys.stderr)
         return 1
 
     if args.show_url:

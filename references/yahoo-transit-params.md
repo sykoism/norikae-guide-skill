@@ -108,6 +108,34 @@ Use Japanese station names for query parameters. A few common conversions:
 
 When user-provided names can match multiple stations, ask one clarification question before querying.
 
+## Traditional Chinese & Cantonese Station Normalization
+
+The primary user base may input station names in Traditional Chinese or Cantonese romanization.
+Always normalize to the standard Japanese station name before building the query URL.
+
+| Traditional Chinese / Cantonese Input | Japanese Station Name | Notes |
+| --- | --- | --- |
+| 澀谷 / 涩谷 | 渋谷 | Common variant spellings |
+| 新宿 | 新宿 | Same in all CJK scripts |
+| 東京 / 东京 | 東京 | Traditional / Simplified |
+| 橫濱 / 横滨 | 横浜 | Traditional / Simplified |
+| 大阪 | 大阪 | Same in all CJK scripts |
+| 京都 | 京都 | Same in all CJK scripts |
+| 名古屋 | 名古屋 | Same in all CJK scripts |
+| 神戶 / 神户 | 神戸 | Traditional / Simplified |
+| 札幌 | 札幌 | Same in all CJK scripts |
+| 函館 / 函馆 | 函館 | Traditional / Simplified |
+| 小樽 | 小樽 | Same in all CJK scripts |
+| 新千歲 / 新千岁 | 新千歳空港 | Map to airport station name |
+| 河口湖 | 河口湖 | Same in all CJK scripts |
+| 奈良 | 奈良 | Same in all CJK scripts |
+| 廣島 / 广岛 | 広島 | Traditional / Simplified |
+| 池袋 | 池袋 | Same in all CJK scripts |
+| 上野 | 上野 | Same in all CJK scripts |
+| 秋葉原 / 秋叶原 | 秋葉原 | Traditional / Simplified |
+| 品川 | 品川 | Same in all CJK scripts |
+| 新大阪 | 新大阪 | Same in all CJK scripts |
+
 ## Command Examples
 
 ```bash

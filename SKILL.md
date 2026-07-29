@@ -6,7 +6,10 @@ description: Search Japan train routes and station timetables via Yahoo! 乗換�
 # Norikae Guide
 
 Search Japan train routes and look up station timetables using Yahoo! 乗換案内.
-Supports English, Chinese, and Japanese input — always convert station names to Japanese before querying (e.g. Shibuya → 渋谷, 涩谷 → 渋谷).
+
+Supports English, Japanese, Simplified Chinese, **Traditional Chinese, and Cantonese** input.
+Always convert station names to Japanese before querying (e.g. Shibuya → 渋谷, 澀谷/涩谷 → 渋谷, 新宿 → 新宿).
+See `references/yahoo-transit-params.md` for the full station name normalization table.
 
 ## Route Search
 
@@ -35,18 +38,18 @@ python3 scripts/fetch_norikae_routes.py --url '<full-yahoo-url>' --show-url
 
 | User intent | CLI flags |
 | --- | --- |
-| cheapest / 最便宜 | `--sort-by fare` |
-| fastest / 最快 | `--sort-by time` |
-| fewest transfers / 换乘最少 | `--sort-by transfer` |
-| no shinkansen / 不要新干线 | `--no-use-shinkansen` |
-| local trains only / 在来线 | `--no-use-shinkansen --no-use-express` |
-| no buses / 不要巴士 | `--no-use-highway-bus --no-use-local-bus` |
-| cash fare / 现金票价 | `--ticket cash` |
-| reserved seat / 指定席 | `--seat-preference reserved` |
-| Green Car / 绿车 | `--seat-preference green` |
-| arrive by / XX点前到 | `--time-type arrival` |
-| first train / 始発 | `--time-type first_train` |
-| last train / 終電 | `--time-type last_train` |
+| cheapest / 最便宜 / 最平 | `--sort-by fare` |
+| fastest / 最快 / 搭咩車最快 | `--sort-by time` |
+| fewest transfers / 换乘最少 / 最少轉車 / 轉車最少 | `--sort-by transfer` |
+| no shinkansen / 不要新干线 / 唔搭新幹線 | `--no-use-shinkansen` |
+| local trains only / 在来線だけ / 普通車 | `--no-use-shinkansen --no-use-express` |
+| no buses / 不要巴士 / 唔搭巴士 | `--no-use-highway-bus --no-use-local-bus` |
+| cash fare / 现金票价 / 現金票 | `--ticket cash` |
+| reserved seat / 指定席 / 劃位 | `--seat-preference reserved` |
+| Green Car / 绿车 / 頭等車廂 | `--seat-preference green` |
+| arrive by / XX点前到 / XX點前到 | `--time-type arrival` |
+| first train / 始発 / 首班車 | `--time-type first_train` |
+| last train / 終電 / 尾班車 / 最後一班 | `--time-type last_train` |
 
 ## Timetable Lookup
 
@@ -68,7 +71,12 @@ Follow these steps in order:
    ```bash
    python3 scripts/fetch_timetable.py timetable <station-code> <gid> [--kind 1|2|4]
    ```
-   `--kind`: `1` = weekday, `2` = saturday, `4` = holiday. Defaults to today's schedule.
+   `--kind`: `1` = weekday, `2` = saturday, `4` = holiday/sunday. Defaults to today's schedule.
+
+   **Day-of-week inference rule:** When the user specifies a date with an explicit weekday or holiday indicator, resolve `--kind` automatically:
+   - 星期一〜五 / Monday–Friday / 平日 → `--kind 1`
+   - 星期六 / Saturday / 土曜 → `--kind 2`
+   - 星期日 / Sunday / 祝日 / 公眾假期 / holiday → `--kind 4`
 
 ## Clarification Rules
 

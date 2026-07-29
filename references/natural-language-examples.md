@@ -102,6 +102,102 @@ When the user asks for a timetable:
 - If the station has multiple lines, either match the user's stated line or ask which line/direction they want.
 - If the user asks about a specific day type (weekday/saturday/holiday), pass `--kind`.
 
+---
+
+## Traditional Chinese & Cantonese Examples
+
+The primary user base communicates in **Traditional Chinese (繁體中文)** and **Cantonese (廣東話)**.
+The following examples illustrate how to parse colloquial Cantonese phrasing into canonical fields.
+
+### Benchmark Queries
+
+#### Query 1 — Last limited express, specific date
+
+> **「10月24號札幌去函館最後一班特急係幾點?」**
+
+Parsing:
+- `from=札幌` (Traditional Chinese: 札幌 → Japanese: 札幌)
+- `to=函館` (Traditional Chinese: 函館 → Japanese: 函館)
+- `month=10`, `day=24`
+- `timeType=last_train` ("最後一班")
+- `useExpress=true` (特急 = limited express; keep express enabled)
+
+Command:
+```bash
+python3 scripts/fetch_norikae_routes.py --from 札幌 --to 函館 --month 10 --day 24 --time-type last_train --show-url
+```
+
+---
+
+#### Query 2 — Fastest route, any transport
+
+> **「新宿去河口湖搭咩車最快?」**
+
+Parsing:
+- `from=新宿`
+- `to=河口湖`
+- `sortBy=time` ("最快" = fastest)
+- "搭咩車" = which train/transport — no constraint, use defaults
+
+Command:
+```bash
+python3 scripts/fetch_norikae_routes.py --from 新宿 --to 河口湖 --sort-by time --show-url
+```
+
+---
+
+#### Query 3 — Fewest transfers, specific date, explicit weekday (Sunday)
+
+> **「10月25號星期日新千歲去小樽, 最少轉車次數點搭?」**
+
+Parsing:
+- `from=新千歳空港` (新千歲 → 新千歳空港; nearest train station at New Chitose Airport)
+- `to=小樽`
+- `month=10`, `day=25`
+- `sortBy=transfer` ("最少轉車次數" = fewest transfers)
+- "星期日" = Sunday → if looking up timetable, use `--kind 4`
+
+Command:
+```bash
+python3 scripts/fetch_norikae_routes.py --from 新千歳空港 --to 小樽 --month 10 --day 25 --sort-by transfer --show-url
+```
+
+---
+
+### Additional Traditional Chinese / Cantonese Examples
+
+| User Request | Canonical Fields / Command hint |
+| --- | --- |
+| 東京去大阪最平係幾錢? | `from=東京`, `to=大阪`, `sortBy=fare` |
+| 我想坐頭班車由新宿去橫濱 | `from=新宿`, `to=横浜`, `timeType=first_train` |
+| 唔想轉車，由京都去奈良點去? | `from=京都`, `to=奈良`, `sortBy=transfer` |
+| 澀谷去池袋，唔搭巴士，最快 | `from=渋谷`, `to=池袋`, `useHighwayBus=false`, `useLocalBus=false`, `sortBy=time` |
+| 11月3號(公眾假期)新大阪時刻表 | `search 新大阪` → `lines <code>` → `timetable <code> <gid> --kind 4` |
+| 想搭指定席由東京去名古屋 | `from=東京`, `to=名古屋`, `seatPreference=reserved` |
+| 由大阪去廣島，唔搭新幹線，點搭? | `from=大阪`, `to=広島`, `useShinkansen=false` |
+
+### Station Name Normalization — Traditional Chinese to Japanese
+
+| Traditional Chinese Input | Cantonese Reading | Japanese Station Name |
+| --- | --- | --- |
+| 澀谷 / 澀谷 | Sap Guk | 渋谷 |
+| 新宿 | San Zuk | 新宿 |
+| 東京 | Dung Ging | 東京 |
+| 橫濱 | Waang Ban | 横浜 |
+| 大阪 | Daai Baan | 大阪 |
+| 京都 | Ging Dou | 京都 |
+| 名古屋 | Ming Gu Uk | 名古屋 |
+| 札幌 | Jaap Pou | 札幌 |
+| 函館 | Ham Gun | 函館 |
+| 小樽 | Siu Taan | 小樽 |
+| 新千歲 | San Cin Seoi | 新千歳空港 |
+| 河口湖 | Ho Hau Wu | 河口湖 |
+| 奈良 | Naai Loeng | 奈良 |
+| 廣島 | Gwong Dou | 広島 |
+| 神戶 | San Woo | 神戸 |
+
+---
+
 ## Clarification Rules
 
 Ask one concise clarification when:
